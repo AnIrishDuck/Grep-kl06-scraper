@@ -7,4 +7,4 @@ More information about API's at
 http://data.udir.no/kl06/
 https://kl06-doc.gitbooks.io/kl06-public/
 
-To execute, simply do `python ./src/script.py
+To execute, simply do `python ./src/script.py`
