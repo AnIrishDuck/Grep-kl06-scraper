@@ -12,8 +12,12 @@ def main():
 	norwayplans = json.load(urlopen(BASE_URL + 'laereplaner.json'))
 	guids = set()
 	def unique(guid):
-		if guid in guids: print(guid)
+		assert guid not in guids
 		guids.add(guid)
+		return guid
+
+	def exists(guid):
+		assert guid in guids
 		return guid
 
 	def make_guid(*args): return '-'.join(args)
@@ -33,7 +37,7 @@ def main():
 			scrappedsubject['vendor_guid'] = unique(subject_guid)
 			scrappedsubject['object_type'] = 'group'
 			scrappedsubject['title'] = parse_title(subject)
-			scrappedsubject['parent_guids'] = plan_guid
+			scrappedsubject['parent_guids'] = exists(plan_guid)
 			outcomes.append(scrappedsubject)
 			for area in subject["hovedomraader-i-kontekst-av-kompetansemaalsett"]:
 				sub = area['hovedomraadeverdier-under-kompetansemaalsett']
@@ -43,14 +47,17 @@ def main():
 						'vendor_guid': unique(area_guid),
 						'object_type': 'group',
 						'title': parse_title(sub),
-						'parent_guids': subject_guid
+						'parent_guids': exists(subject_guid)
 					})
-			outcomes.extend({
-				"guid": unique(make_guid(subject_guid, goal['kode'])),
-				'object_type': 'outcome',
-				"title": goal['tittel'],
-				"parent_guids": make_guid(subject_guid, goal['tilhoerer-hovedomraade']['kode'])
-			} for goal in subject['kompetansemaal'] if goal.get('tilhoerer-hovedomraade'))
+			for goal in subject['kompetansemaal']:
+				if goal.get('tilhoerer-hovedomraade'):
+					parent_guid = make_guid(subject_guid, goal['tilhoerer-hovedomraade']['kode'])
+					outcomes.append({
+						"guid": unique(make_guid(subject_guid, goal['kode'])),
+						'object_type': 'outcome',
+						"title": goal['tittel'],
+						"parent_guids": exists(parent_guid)
+					})
 	print(json.dumps(outcomes))
 
 def get_study_plan_detail(studyplan):
