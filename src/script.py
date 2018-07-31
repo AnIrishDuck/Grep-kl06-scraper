@@ -26,7 +26,7 @@ def main():
 	for studyplan in norwayplans:
 		studyplandetail = get_study_plan_detail(studyplan)
 		scrappedstudyplan = {}
-		plan_guid = '0:' + studyplandetail['kode']
+		plan_guid = '0-' + studyplandetail['kode']
 		scrappedstudyplan['vendor_guid'] = unique(plan_guid)
 		scrappedstudyplan['object_type'] = 'group'
 		scrappedstudyplan['title'] = parse_title(studyplandetail)
