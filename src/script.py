@@ -23,26 +23,31 @@ def main():
 		studyplandetail = get_study_plan_detail(studyplan)
 		scrappedstudyplan = {}
 		plan_guid = '0:' + studyplandetail['kode']
-		scrappedstudyplan['guid'] = unique(plan_guid)
-		scrappedstudyplan['name'] = parse_title(studyplandetail)		
+		scrappedstudyplan['vendor_guid'] = unique(plan_guid)
+		scrappedstudyplan['object_type'] = 'group'
+		scrappedstudyplan['title'] = parse_title(studyplandetail)
 		outcomes.append(scrappedstudyplan)
 		for subject in studyplandetail['kompetansemaal-kapittel']['kompetansemaalsett']:
 			scrappedsubject = {}
 			subject_guid = make_guid(plan_guid, subject['kode'])
-			scrappedsubject['guid'] = unique(subject_guid)
-			scrappedsubject['name'] = parse_title(subject)
+			scrappedsubject['vendor_guid'] = unique(subject_guid)
+			scrappedsubject['object_type'] = 'group'
+			scrappedsubject['title'] = parse_title(subject)
 			scrappedsubject['parent_guids'] = plan_guid
 			outcomes.append(scrappedsubject)
 			for area in subject["hovedomraader-i-kontekst-av-kompetansemaalsett"]:
 				sub = area['hovedomraadeverdier-under-kompetansemaalsett']
 				if area.get('kode'):
+					area_guid = make_guid(subject_guid, area['kode'])
 					outcomes.append({
-						'guid': unique(make_guid(subject_guid, area['kode'])),
+						'vendor_guid': unique(area_guid),
+						'object_type': 'group',
 						'title': parse_title(sub),
 						'parent_guids': subject_guid
 					})
 			outcomes.extend({
 				"guid": unique(make_guid(subject_guid, goal['kode'])),
+				'object_type': 'outcome',
 				"title": goal['tittel'],
 				"parent_guids": make_guid(subject_guid, goal['tilhoerer-hovedomraade']['kode'])
 			} for goal in subject['kompetansemaal'] if goal.get('tilhoerer-hovedomraade'))
