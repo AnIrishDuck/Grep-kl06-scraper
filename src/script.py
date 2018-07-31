@@ -11,23 +11,34 @@ def main():
 	#Parsing blob with all study plans
 	norwayplans = json.load(urlopen(BASE_URL + 'laereplaner.json'))
 	#getting information for each study plan
-	scrappedplans = []
+	outcomes = []
 	for studyplan in norwayplans:
 		studyplandetail = get_study_plan_detail(studyplan)
 		scrappedstudyplan = {}
-		scrappedstudyplan['code'] = studyplandetail['kode']
+		plan_guid = studyplandetail['kode']
+		scrappedstudyplan['guid'] = plan_guid
 		scrappedstudyplan['name'] = parse_title(studyplandetail)		
-		scrappedstudyplan['main_areas'] = [] if studyplandetail['hovedomraade-kapittel'] is None else [parse_title(area) for area in studyplandetail['hovedomraade-kapittel']['hovedomraader']]
-		#getting information for each study plan subject
-		scrappedstudyplan['subjects'] = []
+		outcomes.append(scrappedstudyplan)
 		for subject in studyplandetail['kompetansemaal-kapittel']['kompetansemaalsett']:
 			scrappedsubject = {}
+			scrappedsubject['guid'] = subject['kode']
 			scrappedsubject['name'] = parse_title(subject)
-			scrappedsubject['main_areas'] = [parse_title(area['hovedomraadeverdier-under-kompetansemaalsett']) for area in subject['hovedomraader-i-kontekst-av-kompetansemaalsett']]
-			scrappedsubject['goals'] = [goal['tittel'] for goal in subject['kompetansemaal']]
-			scrappedstudyplan['subjects'].append(scrappedsubject)
-		scrappedplans.append(scrappedstudyplan);
-	print(json.dumps(scrappedplans))
+			scrappedsubject['parent_guids'] = plan_guid
+			outcomes.append(scrappedsubject)
+			for area in subject["hovedomraader-i-kontekst-av-kompetansemaalsett"]:
+				sub = area['hovedomraadeverdier-under-kompetansemaalsett']
+				if area.get('kode'):
+					outcomes.append({
+						'guid': area['kode'],
+						'title': parse_title(sub),
+						'parent_guids': subject['kode']
+					})
+			outcomes.extend({
+				"guid": goal['kode'],
+				"title": goal['tittel'],
+				"parent_guids": goal['tilhoerer-hovedomraade']['kode']
+			} for goal in subject['kompetansemaal'] if goal.get('tilhoerer-hovedomraade'))
+	print(json.dumps(outcomes))
 
 def get_study_plan_detail(studyplan):
 	studyplanfilename =  f"{studyplan['kode']}.json"
