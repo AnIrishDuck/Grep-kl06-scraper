@@ -10,18 +10,26 @@ UTF8 = 'utf-8'
 def main():
 	#Parsing blob with all study plans
 	norwayplans = json.load(urlopen(BASE_URL + 'laereplaner.json'))
+	guids = set()
+	def unique(guid):
+		if guid in guids: print(guid)
+		guids.add(guid)
+		return guid
+
+	def make_guid(*args): return '-'.join(args)
 	#getting information for each study plan
 	outcomes = []
 	for studyplan in norwayplans:
 		studyplandetail = get_study_plan_detail(studyplan)
 		scrappedstudyplan = {}
-		plan_guid = studyplandetail['kode']
-		scrappedstudyplan['guid'] = plan_guid
+		plan_guid = '0:' + studyplandetail['kode']
+		scrappedstudyplan['guid'] = unique(plan_guid)
 		scrappedstudyplan['name'] = parse_title(studyplandetail)		
 		outcomes.append(scrappedstudyplan)
 		for subject in studyplandetail['kompetansemaal-kapittel']['kompetansemaalsett']:
 			scrappedsubject = {}
-			scrappedsubject['guid'] = subject['kode']
+			subject_guid = make_guid(plan_guid, subject['kode'])
+			scrappedsubject['guid'] = unique(subject_guid)
 			scrappedsubject['name'] = parse_title(subject)
 			scrappedsubject['parent_guids'] = plan_guid
 			outcomes.append(scrappedsubject)
@@ -29,14 +37,14 @@ def main():
 				sub = area['hovedomraadeverdier-under-kompetansemaalsett']
 				if area.get('kode'):
 					outcomes.append({
-						'guid': area['kode'],
+						'guid': unique(make_guid(subject_guid, area['kode'])),
 						'title': parse_title(sub),
-						'parent_guids': subject['kode']
+						'parent_guids': subject_guid
 					})
 			outcomes.extend({
-				"guid": goal['kode'],
+				"guid": unique(make_guid(subject_guid, goal['kode'])),
 				"title": goal['tittel'],
-				"parent_guids": goal['tilhoerer-hovedomraade']['kode']
+				"parent_guids": make_guid(subject_guid, goal['tilhoerer-hovedomraade']['kode'])
 			} for goal in subject['kompetansemaal'] if goal.get('tilhoerer-hovedomraade'))
 	print(json.dumps(outcomes))
 
