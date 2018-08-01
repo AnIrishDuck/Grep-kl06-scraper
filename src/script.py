@@ -32,33 +32,43 @@ def main():
 		scrappedstudyplan['object_type'] = 'group'
 		scrappedstudyplan['title'] = parse_title(studyplandetail)
 		outcomes.append(scrappedstudyplan)
-		for subject in studyplandetail['kompetansemaal-kapittel']['kompetansemaalsett']:
-			scrappedsubject = {}
+		subjects = studyplandetail['kompetansemaal-kapittel']['kompetansemaalsett']
+		for subject in subjects:
 			subject_guid = make_guid(plan_guid, subject['kode'])
-			scrappedsubject['vendor_guid'] = unique(subject_guid)
-			scrappedsubject['object_type'] = 'group'
-			scrappedsubject['title'] = parse_title(subject)
-			scrappedsubject['parent_guids'] = exists(plan_guid)
-			outcomes.append(scrappedsubject)
+			if len(subjects) > 1:
+				scrappedsubject = {}
+				scrappedsubject['vendor_guid'] = unique(subject_guid)
+				scrappedsubject['object_type'] = 'group'
+				scrappedsubject['title'] = parse_title(subject)
+				scrappedsubject['parent_guids'] = exists(plan_guid)
+				outcomes.append(scrappedsubject)
+				parent = subject_guid
+			else:
+				parent = plan_guid
+
 			for area in subject["hovedomraader-i-kontekst-av-kompetansemaalsett"]:
 				sub = area['hovedomraadeverdier-under-kompetansemaalsett']
-				if area.get('kode'):
-					area_guid = make_guid(subject_guid, area['kode'])
-					outcomes.append({
-						'vendor_guid': unique(area_guid),
-						'object_type': 'group',
-						'title': parse_title(sub),
-						'parent_guids': exists(subject_guid)
-					})
+				area_guid = make_guid(subject_guid, area['kode'])
+				outcomes.append({
+					'vendor_guid': unique(area_guid),
+					'object_type': 'group',
+					'title': parse_title(sub),
+					'parent_guids': exists(parent)
+				})
+
 			for goal in subject['kompetansemaal']:
 				if goal.get('tilhoerer-hovedomraade'):
-					parent_guid = make_guid(subject_guid, goal['tilhoerer-hovedomraade']['kode'])
-					outcomes.append({
-						"guid": unique(make_guid(subject_guid, goal['kode'])),
-						'object_type': 'outcome',
-						"title": goal['tittel'],
-						"parent_guids": exists(parent_guid)
-					})
+					goal_parent = make_guid(subject_guid, goal['tilhoerer-hovedomraade']['kode'])
+				else:
+					goal_parent = parent
+
+				outcomes.append({
+					"vendor_guid": unique(make_guid(subject_guid, goal['kode'])),
+					'object_type': 'outcome',
+					"title": goal['tittel'],
+					"parent_guids": exists(goal_parent)
+				})
+
 	print(json.dumps(outcomes))
 
 	writer = csv.writer(open('outcomes.csv', 'w', newline=''))
