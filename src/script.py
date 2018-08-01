@@ -3,6 +3,7 @@ from urllib.request import urlopen
 import json
 from pathlib import Path
 import io
+import csv
 
 BASE_URL = 'http://data.udir.no/kl06/'
 UTF8 = 'utf-8'
@@ -59,6 +60,13 @@ def main():
 						"parent_guids": exists(parent_guid)
 					})
 	print(json.dumps(outcomes))
+
+	writer = csv.writer(open('outcomes.csv', 'w', newline=''))
+	headers = ['vendor_guid', 'object_type', 'title', 'parent_guids']
+	writer.writerow(headers)
+	for outcome in outcomes:
+		writer.writerow([outcome.get(h) for h in headers])
+
 
 def get_study_plan_detail(studyplan):
 	studyplanfilename =  f"{studyplan['kode']}.json"
