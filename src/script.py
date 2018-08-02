@@ -30,7 +30,7 @@ def main():
 		plan_guid = '0-' + studyplandetail['kode']
 		scrappedstudyplan['vendor_guid'] = unique(plan_guid)
 		scrappedstudyplan['object_type'] = 'group'
-		scrappedstudyplan['title'] = parse_title(studyplandetail)
+		scrappedstudyplan['title'] = studyplandetail['kode'] + ' - ' + parse_title(studyplandetail)[:255]
 		outcomes.append(scrappedstudyplan)
 		subjects = studyplandetail['kompetansemaal-kapittel']['kompetansemaalsett']
 		for subject in subjects:
