@@ -71,11 +71,14 @@ def main():
 
 	print(json.dumps(outcomes))
 
+	numbers = list(reversed([str(n) for n in range(1,7)]))
+	defaults = list(v for pair in zip(numbers, numbers) for v in pair)
 	writer = csv.writer(open('outcomes.csv', 'w', newline=''))
-	headers = ['vendor_guid', 'object_type', 'title', 'parent_guids']
+	headers = ['vendor_guid', 'object_type', 'title', 'parent_guids', 'ratings']
 	writer.writerow(headers)
 	for outcome in outcomes:
-		writer.writerow([outcome.get(h) for h in headers])
+		ratings = defaults if outcome['object_type'] == 'outcome' else []
+		writer.writerow([outcome.get(h) for h in headers[:-1]] + ratings)
 
 
 def get_study_plan_detail(studyplan):
