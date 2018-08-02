@@ -39,7 +39,7 @@ def main():
 				scrappedsubject = {}
 				scrappedsubject['vendor_guid'] = unique(subject_guid)
 				scrappedsubject['object_type'] = 'group'
-				scrappedsubject['title'] = parse_title(subject)
+				scrappedsubject['title'] = parse_title(subject)[:255]
 				scrappedsubject['parent_guids'] = exists(plan_guid)
 				outcomes.append(scrappedsubject)
 				parent = subject_guid
@@ -52,7 +52,7 @@ def main():
 				outcomes.append({
 					'vendor_guid': unique(area_guid),
 					'object_type': 'group',
-					'title': parse_title(sub),
+					'title': parse_title(sub)[:255],
 					'parent_guids': exists(parent)
 				})
 
@@ -65,7 +65,7 @@ def main():
 				outcomes.append({
 					"vendor_guid": unique(make_guid(subject_guid, goal['kode'])),
 					'object_type': 'outcome',
-					"title": goal['tittel'],
+					"title": goal['tittel'][:255],
 					"parent_guids": exists(goal_parent)
 				})
 
