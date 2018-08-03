@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import io
 import csv
+import string
 
 BASE_URL = 'http://data.udir.no/kl06/'
 UTF8 = 'utf-8'
@@ -22,15 +23,32 @@ def main():
 		return guid
 
 	def make_guid(*args): return '-'.join(args)
+
+	# making supplemental groups
+	def make_toplevel(letter):
+		guid = f"0-top-{letter}"
+		return (
+			letter,
+			{
+				'vendor_guid': unique(guid),
+				'object_type': 'group',
+				'title': letter,
+			}
+		)
+
 	#getting information for each study plan
-	outcomes = []
+	alphabet = dict(make_toplevel(letter) for letter in string.ascii_uppercase)
+	top_guids = dict((v, o['vendor_guid']) for v, o in alphabet.items())
+	outcomes = list(alphabet.values())
 	for studyplan in norwayplans:
 		studyplandetail = get_study_plan_detail(studyplan)
 		scrappedstudyplan = {}
-		plan_guid = '0-' + studyplandetail['kode']
+		code = studyplandetail['kode']
+		plan_guid = '0-' + code
 		scrappedstudyplan['vendor_guid'] = unique(plan_guid)
 		scrappedstudyplan['object_type'] = 'group'
-		scrappedstudyplan['title'] = studyplandetail['kode'] + ' - ' + parse_title(studyplandetail)[:255]
+		scrappedstudyplan['title'] = code + ' - ' + parse_title(studyplandetail)[:255]
+		scrappedstudyplan['parent_guids'] = exists(top_guids[code[0]])
 		outcomes.append(scrappedstudyplan)
 		subjects = studyplandetail['kompetansemaal-kapittel']['kompetansemaalsett']
 		for subject in subjects:
