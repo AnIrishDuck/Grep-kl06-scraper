@@ -11,7 +11,7 @@ UTF8 = 'utf-8'
 
 def main():
 	#Parsing blob with all study plans
-	norwayplans = json.load(urlopen(BASE_URL + 'laereplaner.json'))
+	norwayplans = json.load(urlopen(BASE_URL + 'laereplaner'))
 	guids = set()
 	def unique(guid):
 		assert guid not in guids
