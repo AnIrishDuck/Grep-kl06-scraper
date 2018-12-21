@@ -45,7 +45,9 @@ def main():
 		scrappedstudyplan = {}
 		code = studyplandetail['kode']
 		plan_guid = '0-' + code
+		active = 'active' if len(studyplandetail['erstattes-av']) > 0 else 'deleted'
 		scrappedstudyplan['vendor_guid'] = unique(plan_guid)
+		scrappedstudyplan['workflow_state'] = active
 		scrappedstudyplan['object_type'] = 'group'
 		scrappedstudyplan['title'] = code + ' - ' + parse_title(studyplandetail)[:255]
 		scrappedstudyplan['parent_guids'] = exists(top_guids[code[0]])
@@ -56,6 +58,7 @@ def main():
 			if len(subjects) > 1:
 				scrappedsubject = {}
 				scrappedsubject['vendor_guid'] = unique(subject_guid)
+				scrappedsubject['workflow_state'] = active
 				scrappedsubject['object_type'] = 'group'
 				scrappedsubject['title'] = parse_title(subject)[:255]
 				scrappedsubject['parent_guids'] = exists(plan_guid)
@@ -69,6 +72,7 @@ def main():
 				area_guid = make_guid(subject_guid, area['kode'])
 				outcomes.append({
 					'vendor_guid': unique(area_guid),
+					'workflow_state': active,
 					'object_type': 'group',
 					'title': parse_title(sub)[:255],
 					'parent_guids': exists(parent)
@@ -82,6 +86,7 @@ def main():
 
 				outcomes.append({
 					"vendor_guid": unique(make_guid(subject_guid, goal['kode'])),
+					"workflow_state": active,
 					'object_type': 'outcome',
 					"title": goal['tittel'][:255],
 					"parent_guids": exists(goal_parent)
